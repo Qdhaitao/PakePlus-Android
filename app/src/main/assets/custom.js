@@ -62,3 +62,42 @@ window.open = function (url, target, features) {
 
 document.addEventListener('click', hookClick, { capture: true })
 
+// 禁止手势导航（左右滑动导致的页面前进/后退）
+function disableSwipeNavigation() {
+    // 通过JavaScript动态添加CSS规则
+    const style = document.createElement('style');
+    style.textContent = `
+        html, body {
+            overscroll-behavior-x: none !important;
+        }
+    `;
+    document.head.appendChild(style);
+
+    // 阻止 touchstart 事件的默认行为
+    document.addEventListener('touchstart', function(e) {
+        if (e.touches.length > 1) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+
+    // 阻止 touchmove 事件的默认行为（主要针对左右滑动）
+    document.addEventListener('touchmove', function(e) {
+        // 如果检测到水平滑动，则阻止默认行为
+        if (e.touches.length === 1) {
+            const touch = e.touches[0];
+            const startX = touch.pageX;
+            
+            // 检测水平滑动
+            if (Math.abs(touch.pageX - startX) > 10) {
+                e.preventDefault();
+            }
+        }
+    }, { passive: false });
+}
+
+// 页面加载完成后执行
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', disableSwipeNavigation);
+} else {
+    disableSwipeNavigation();
+}
